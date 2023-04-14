@@ -22,6 +22,7 @@ let emojiSuccess = [
   "🎺",
   "🎷",
 ];
+const awordEmoji = ['💚','💛','🧡','❤️','❤️‍🔥'];
 
 const mainKeybord = Markup.keyboard(
   [
@@ -36,7 +37,8 @@ const mainKeybord = Markup.keyboard(
 );
 
 bot.start(async (ctx) => {
-  return await ctx.reply(`Привет! ${ctx.chat.first_name} 👑`, mainKeybord.oneTime().resize());
+   await ctx.reply(`Привет! ${ctx.chat.first_name} 👑`, mainKeybord.oneTime().resize());
+   console.log(ctx.message)
 });
 
 function timeWater(ctx) {
