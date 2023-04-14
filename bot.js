@@ -36,7 +36,7 @@ const mainKeybord = Markup.keyboard(
 );
 
 bot.start(async (ctx) => {
-  return await ctx.reply(`Привет ${ctx.chat.first_name}`, mainKeybord.oneTime().resize());
+  return await ctx.reply(`Привет! ${ctx.chat.first_name} 👑`, mainKeybord.oneTime().resize());
 });
 
 function timeWater(ctx) {
