@@ -1,12 +1,12 @@
-const Telegraf = require('telegraf');
-const Markup = require('telegraf');
-const fs = require('fs');
+import Telegraf from 'telegraf';
+import { keyboard } from 'telegraf';
+import { readFileSync } from 'fs';
 
 const TOKEN = "6091844559:AAG2p68kB5546x1TFt17l5Kfpb1-haQ3x3M";
 
 const bot = new Telegraf(TOKEN);
 
-const data = JSON.parse(fs.readFileSync("date.json"));
+const data = JSON.parse(readFileSync("date.json"));
 let time;
 let drink = false;
 let emoji = ["😁", "😄", "😅", "😠", "😡", "🥵", "🥶", "🤡", "💀"];
@@ -24,7 +24,7 @@ let emojiSuccess = [
   "🎷",
 ];
 
-const mainKeybord = Markup.keyboard(
+const mainKeybord = keyboard(
   [
     "😍 Напомнить попить водички!",
     "✅ Выпил!",
