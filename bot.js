@@ -4,13 +4,7 @@ import fs from "fs";
 const TOKEN = "6290552808:AAHIduCawXKgTjqahlkfYJ-CPzFwQFfJb0o";
 
 const bot = new Telegraf(TOKEN);
-// let users = {};
 const users = JSON.parse(fs.readFileSync("users.json"));
-
-// if (fs.existsSync("users.json")) {
-//   console.log('s2s')
-//   users = JSON.parse(fs.readFileSync("users.json"));
-// }
 
 function saveUsers() {
   return fs.writeFileSync("users.json", JSON.stringify(users));
@@ -150,17 +144,6 @@ bot.hears("😍 Напомнить попить водички!", async (ctx, ne
       }, 1000);
     }
   });
-
-  // if (users[userId].drink) {
-  //   return ctx.reply(
-  //     'Время уже идет! Посмотреть можно по кнопке "Времени осталось"'
-  //   );
-  // } else {
-  //   users[userId].drink = true;
-  //   ctx.reply("Через 2 часа придет напоминание!");
-  //   timeWater(ctx, userId);
-  //   saveUsers();
-  // }
 });
 
 bot.hears("Закрыть", (ctx) => {
@@ -271,7 +254,7 @@ bot.hears("Времени осталось", (ctx) => {
 bot.hears("👑 Награды", async (ctx) => {
   const userId = ctx.from.id;
 
-  if (!users[userId] || users[userId].timeDrink < 2) {
+  if (!users[userId] || users[userId].timeDrink < 10) {
     ctx.reply("У тебя ещё нет наград :(");
   } else {
     awardKeybord.reply_markup.keyboard.splice(0, 1, users[userId].awadEmojiAll);
