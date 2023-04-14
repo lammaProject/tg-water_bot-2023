@@ -1,0 +1,17 @@
+{
+  "name": "telegram",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "nodemon bot"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "nodemon": "^2.0.22",
+    "telegraf": "^4.12.2",
+    "ts-node": "^10.9.1"
+  }
+}
