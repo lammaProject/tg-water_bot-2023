@@ -1,4 +1,4 @@
-import fs from 'fs';
+const fs = require("fs");
 
 const text = `
 1. По подсчетам ученых института Вернадского, совместно с учеными из Германии и Франции возраст воды на Земле 2.7 млрд. лет.
@@ -202,10 +202,7 @@ const text = `
 100. Вода в отличие от большинства жидкостей замерзает неравномерно, а сверху вниз, что позволяет водным животным выжить даже в холодное время года.
 `;
 
-const textN = text.split("\n")
-const facts = textN.filter(item => item !== '');
+const textN = text.split("\n");
+const facts = textN.filter((item) => item !== "");
 
-fs.writeFileSync('date.json', JSON.stringify(facts));
-
-
-
+fs.writeFileSync("date.json", JSON.stringify(facts));

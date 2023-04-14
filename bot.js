@@ -1,5 +1,6 @@
-import { Telegraf, Markup } from "telegraf";
-import fs from "fs";
+const Telegraf = require('telegraf');
+const Markup = require('telegraf');
+const fs = require('fs');
 
 const TOKEN = "6091844559:AAG2p68kB5546x1TFt17l5Kfpb1-haQ3x3M";
 
