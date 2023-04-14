@@ -1,15 +1,22 @@
 import { Telegraf, Markup } from "telegraf";
 import fs from "fs";
 
-const TOKEN = "6091844559:AAG2p68kB5546x1TFt17l5Kfpb1-haQ3x3M";
+const TOKEN = "6290552808:AAHIduCawXKgTjqahlkfYJ-CPzFwQFfJb0o";
 
 const bot = new Telegraf(TOKEN);
+// let users = {};
+const users = JSON.parse(fs.readFileSync("users.json"));
+
+// if (fs.existsSync("users.json")) {
+//   console.log('s2s')
+//   users = JSON.parse(fs.readFileSync("users.json"));
+// }
+
+function saveUsers() {
+  return fs.writeFileSync("users.json", JSON.stringify(users));
+}
 
 const data = JSON.parse(fs.readFileSync("date.json"));
-console.log(data.facts);
-let timeDrink = 0;
-let time;
-let drink = false;
 let emoji = ["😁", "😄", "😅", "😠", "😡", "🥵", "🥶", "🤡", "💀"];
 let emojiSuccess = [
   "🏃‍♀️",
@@ -24,8 +31,8 @@ let emojiSuccess = [
   "🎺",
   "🎷",
 ];
+
 const awardEmojiList = ["💚", "💛", "🧡", "❤️", "❤️‍🔥"];
-const awadEmojiAll = [];
 
 const mainKeybord = Markup.keyboard(
   [
@@ -44,118 +51,226 @@ const awardKeybord = Markup.keyboard([], {
   wrap: (btn, index, currentRow) => currentRow.length >= (index + 1) / btn,
 }).resize();
 
+const offtenTimeKeyboard = Markup.keyboard([], {
+  wrap: (btn, index, currentRow) => currentRow.length >= (index + 1) / 5,
+}).resize();
+
 bot.start(async (ctx) => {
-  await ctx.reply(
+  const userId = ctx.message.from.id;
+
+  ctx.reply(
     `Привет! ${ctx.chat.first_name} 👑`,
     mainKeybord.oneTime().resize()
   );
-  console.log(ctx.message);
+
+  if (!users[userId]) {
+    users[userId] = {
+      awadEmojiAll: [],
+      timeDrink: 0,
+      oftenTime: ["Закрыть"],
+    };
+
+    saveUsers();
+  }
 });
 
-function timeWater(ctx) {
-  time = 0;
-  let timeEmoji = 0;
+function timeWater(ctx, userId) {
+  users[userId].time = 0;
+  users[userId].timeEmoji = 0;
 
-  if (drink) {
+  if (users[userId].drink) {
     const timeInterval = setInterval(() => {
-      if (!drink) return clearInterval(timeInterval);
-      if (time > 7198) {
+      if (!users[userId].drink) return clearInterval(timeInterval);
+      if (Math.floor(users[userId].time) / 60 > users[userId].timeToNeed) {
         ctx.reply("Пришло время пить!");
 
         const drinkWater = setInterval(() => {
-          if (!drink) return clearInterval(drinkWater);
+          if (!users[userId].drink) return clearInterval(drinkWater);
 
-          if (timeEmoji > 8) {
-            ctx.reply(`Попей же ${emoji[timeEmoji - 1]}`);
+          if (users[userId].timeEmoji > 8) {
+            ctx.reply(`Попей же ${emoji[users[userId].timeEmoji - 1]}`);
           } else {
-            ctx.reply(`Попей! ${emoji[timeEmoji]}`);
-            timeEmoji++;
+            ctx.reply(`Попей! ${emoji[users[userId].timeEmoji]}`);
+            users[userId].timeEmoji++;
           }
+
+          saveUsers();
         }, 1000);
 
         clearInterval(timeInterval);
       }
-      time++;
+
+      users[userId].time++;
+      saveUsers();
     }, 1000);
   }
 }
 
 bot.hears("😍 Напомнить попить водички!", async (ctx, next) => {
-  if (drink)
-    return ctx.reply(
-      'Время уже идет! Посмотреть можно по кнопке "Времени осталось"'
-    );
+  const userId = ctx.message.from.id;
 
-  drink = true;
-  ctx.reply("Через 2 часа придет напоминание!");
-  timeWater(ctx);
+  if (offtenTimeKeyboard.reply_markup.keyboard.length < 1) {
+    offtenTimeKeyboard.reply_markup.keyboard.push(users[userId].oftenTime);
+  }
+
+  offtenTimeKeyboard.reply_markup.keyboard.splice(
+    0,
+    1,
+    users[userId].oftenTime
+  );
+
+  ctx.reply("Ставь время!", offtenTimeKeyboard);
+  console.log(offtenTimeKeyboard.reply_markup);
+
+  bot.on("message", (ctx) => {
+    const userId = ctx.message.from.id;
+    const reg = /^\d+$/;
+    const messageText = ctx.message.text;
+    if (reg.test(messageText)) {
+      const hours = Math.floor(messageText / 60);
+      const minutes = messageText % 60;
+      hours === 0
+        ? ctx.reply(`${minutes} мин!`, mainKeybord)
+        : ctx.reply(`${hours}час ${minutes}мин!`, mainKeybord);
+      users[userId].timeToNeed = messageText;
+
+      if (users[userId].drink) users[userId].drink = false;
+
+      setTimeout(() => {
+        users[userId].drink = true;
+        if (users[userId].oftenTime.some((item) => item === ctx.message.text)) {
+        } else {
+          if (users[userId].oftenTime.length > 5) {
+            users[userId].oftenTime.pop();
+          }
+          users[userId].oftenTime.splice(1, 0, ctx.message.text);
+        }
+        timeWater(ctx, userId);
+        saveUsers();
+      }, 1000);
+    }
+  });
+
+  // if (users[userId].drink) {
+  //   return ctx.reply(
+  //     'Время уже идет! Посмотреть можно по кнопке "Времени осталось"'
+  //   );
+  // } else {
+  //   users[userId].drink = true;
+  //   ctx.reply("Через 2 часа придет напоминание!");
+  //   timeWater(ctx, userId);
+  //   saveUsers();
+  // }
+});
+
+bot.hears("Закрыть", (ctx) => {
+  ctx.reply("Когда решишься напиши!", mainKeybord);
 });
 
 bot.hears("✅ Выпил!", async (ctx) => {
-  timeDrink++;
-  switch (timeDrink) {
+  const userId = ctx.from.id;
+
+  users[userId].timeDrink++;
+
+  switch (users[userId].timeDrink) {
     case 10:
-      awadEmojiAll.push(awardEmojiList[0]);
-      awardKeybord.reply_markup.keyboard.push(awadEmojiAll);
+      users[userId].awadEmojiAll.push(awardEmojiList[0]);
+      awardKeybord.reply_markup.keyboard.push(users[userId].awadEmojiAll);
       await ctx.reply("💚 загляни в награды!");
       break;
     case 20:
-      awadEmojiAll.push(awardEmojiList[1]);
-      awardKeybord.reply_markup.keyboard.splice(0, 1, awadEmojiAll);
+      users[userId].awadEmojiAll.push(awardEmojiList[1]);
+      awardKeybord.reply_markup.keyboard.splice(
+        0,
+        1,
+        users[userId].awadEmojiAll
+      );
       await ctx.reply("💛 загляни в награды!");
       break;
     case 30:
-      awadEmojiAll.push(awardEmojiList[2]);
-      awardKeybord.reply_markup.keyboard.splice(0, 1, awadEmojiAll);
+      users[userId].awadEmojiAll.push(awardEmojiList[2]);
+      awardKeybord.reply_markup.keyboard.splice(
+        0,
+        1,
+        users[userId].awadEmojiAll
+      );
       await ctx.reply("🧡 загляни в награды!");
       break;
     case 40:
-      awadEmojiAll.push(awardEmojiList[3]);
-      awardKeybord.reply_markup.keyboard.splice(0, 1, awadEmojiAll);
+      users[userId].awadEmojiAll.push(awardEmojiList[3]);
+      awardKeybord.reply_markup.keyboard.splice(
+        0,
+        1,
+        users[userId].awadEmojiAll
+      );
       await ctx.reply("❤️ загляни в награды!");
       break;
     case 50:
-      awadEmojiAll.push(awardEmojiList[4]);
-      awardKeybord.reply_markup.keyboard.splice(0, 1, awadEmojiAll);
+      users[userId].awadEmojiAll.push(awardEmojiList[4]);
+      awardKeybord.reply_markup.keyboard.splice(
+        0,
+        1,
+        users[userId].awadEmojiAll
+      );
       await ctx.reply("❤️‍🔥 загляни в награды!");
       break;
   }
-  drink = false;
+
+  users[userId].drink = false;
   setTimeout(() => {
-    drink = true;
-    timeWater(ctx);
+    users[userId].drink = true;
+    timeWater(ctx, userId);
   }, 1000);
 
   const randomEmoji =
     emojiSuccess[Math.floor(Math.random() * emojiSuccess.length)];
   const randomFact = data.facts[Math.floor(Math.random() * data.facts.length)];
 
-  await ctx.reply(`${randomEmoji} следующий прием через 2 часа`);
+  saveUsers();
+
+  const hours = Math.floor(users[userId].timeToNeed / 60);
+  const minutes = users[userId].timeToNeed % 60;
+
+  hours === 0
+    ? await ctx.reply(`${randomEmoji} Следующий прием через ${minutes} мин!`, mainKeybord)
+    : await ctx.reply(`${randomEmoji} Следующий прием через ${hours}час ${minutes}мин!`, mainKeybord);
+
   await ctx.reply(randomFact);
 });
 
 bot.hears("❌ Больше не напоминать!", async (ctx) => {
-  drink = false;
+  const userId = ctx.from.id;
+  users[userId].drink = false;
+  timeWater(ctx, userId);
   ctx.reply("Хорошо!");
+  saveUsers();
 });
 
 bot.hears("Времени осталось", (ctx) => {
-  if (drink) {
-    const min = Math.floor(120 - time / 60);
-    if (time < 60) return ctx.reply(`Прошло только ${time} секунд о.о`);
+  const userId = ctx.from.id;
+
+  if (users[userId].drink) {
+    const min = Math.floor(users[userId].time / 60);
+    if (users[userId].time < 60)
+      return ctx.reply(`Прошло только ${users[userId].time} сек о.о`);
 
     min < 60
-      ? ctx.reply(`Осталось ${min} минут`)
-      : ctx.reply(`${Math.floor(min / 60)} час ${min} минут`);
+      ? ctx.reply(`Осталось ${min} мин`)
+      : ctx.reply(`${Math.floor(min / 60)} час ${min} мин`);
   } else {
     return ctx.reply("Вы еще не запустили время!");
   }
 });
 
 bot.hears("👑 Награды", async (ctx) => {
-  timeDrink < 2
-    ? ctx.reply("У тебя ещё нет наград :(")
-    : ctx.reply("Награды 📈", awardKeybord);
+  const userId = ctx.from.id;
+
+  if (!users[userId] || users[userId].timeDrink < 2) {
+    ctx.reply("У тебя ещё нет наград :(");
+  } else {
+    awardKeybord.reply_markup.keyboard.splice(0, 1, users[userId].awadEmojiAll);
+    ctx.reply("Награды 📈", awardKeybord);
+  }
 });
 
 bot.hears("💚", async (ctx) => {
