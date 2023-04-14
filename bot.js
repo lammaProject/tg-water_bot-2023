@@ -256,7 +256,7 @@ bot.hears("Времени осталось", (ctx) => {
   const userId = ctx.from.id;
 
   if (users[userId].drink) {
-    const min = Math.floor(users[userId].time / 60);
+    const min = users[userId].timeToNeed - Math.floor(users[userId].time / 60);
     if (users[userId].time < 60)
       return ctx.reply(`Прошло только ${users[userId].time} сек о.о`);
 
