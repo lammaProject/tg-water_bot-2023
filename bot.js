@@ -57,7 +57,7 @@ const offtenTimeKeyboard = Markup.keyboard([], {
 
 bot.start(async (ctx) => {
   const userId = ctx.message.from.id;
-
+  console.log(users);
   ctx.reply(
     `Привет! ${ctx.chat.first_name} 👑`,
     mainKeybord.oneTime().resize()
@@ -232,8 +232,14 @@ bot.hears("✅ Выпил!", async (ctx) => {
   const minutes = users[userId].timeToNeed % 60;
 
   hours === 0
-    ? await ctx.reply(`${randomEmoji} Следующий прием через ${minutes} мин!`, mainKeybord)
-    : await ctx.reply(`${randomEmoji} Следующий прием через ${hours}час ${minutes}мин!`, mainKeybord);
+    ? await ctx.reply(
+        `${randomEmoji} Следующий прием через ${minutes} мин!`,
+        mainKeybord
+      )
+    : await ctx.reply(
+        `${randomEmoji} Следующий прием через ${hours}час ${minutes}мин!`,
+        mainKeybord
+      );
 
   await ctx.reply(randomFact);
 });
