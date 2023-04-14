@@ -5,7 +5,8 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "test": "nodemon bot"
+    "test": "nodemon bot",
+    "safestart":"node --experimental-modules bot.js"
   },
   "author": "",
   "license": "ISC",
